@@ -18,7 +18,5 @@ Matriz de emparejamiento:
         C -1 -1 1 -1
         T -1 -1 -1 1
 
-        Segun criterio : (??????????)
-
 Compilacion del Programa:
-    :~$ ./proyecto -C1 CYTB1.txt -C2 CYTB2.txt -U funU.tex -V val
+    :~$ ./proyecto -C1 CYTB.txt -C2 CYTB2.txt -U funU.tex -V val
