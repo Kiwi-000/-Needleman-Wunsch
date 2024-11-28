@@ -1,28 +1,64 @@
 #include <iostream>
-#include <fstream> // manejo de archivos 
-#include <sstream> 
+#include <fstream>
 #include <string>
+#include <sstream>
 #include <algorithm>
-#include <map> // Manejo de funU.txt
 
 using namespace std;
-
-//A = {'A', 'G', 'C', 'T'}
-//Donde C1 , S = CYTB.txt 
-//Donde C2 , T = CYTB2.txt
-// U = funU.txt
 
 // Dimensiones máximas de las secuencias
 const int MAXN = 1001;
 const int MAXM = 1001;
 
+// Matriz de emparejamiento (para A, G, C, T)
+int matrizEmparejamiento[4][4]; // 4x4 matriz para A, G, C, T
+char alfabeto[4] = {'A', 'G', 'C', 'T'}; // Índices para la matriz
 
-string leerSecuencia(const string &archivo)
-void leerMatrizEmparejamiento(const string &archivo) {}
+// Función para convertir un carácter en un índice (0-3)
+int indiceCaracter(char c) {
+    for (int i = 0; i < 4; i++) {
+        if (alfabeto[i] == c) {
+            return i;
+        }
+    }
+    return -1; // Retorna -1 si el carácter no está en el alfabeto
+}
 
+string leerSecuencia(const string &archivo) {
+    cout << "Intentando abrir el archivo: " << archivo << endl;
+    ifstream archivoEntrada(archivo);
+    if (!archivoEntrada.is_open()) {
+        cerr << "Error al abrir el archivo: " << archivo << endl;
+        exit(EXIT_FAILURE);
+    }
 
-//------------Algoritmo Needleman-Wunsch---------------------------
+    string secuencia, linea;
+    while (getline(archivoEntrada, linea)) {
+        secuencia += linea;
+    }
+    archivoEntrada.close();
+    cout << "Secuencia leída: " << secuencia << endl;
+    return secuencia;
+}
 
+void leerMatrizEmparejamiento(const string &archivo) {
+    cout << "Intentando abrir el archivo de matriz: " << archivo << endl;
+    ifstream archivoEntrada(archivo);
+    if (!archivoEntrada.is_open()) {
+        cerr << "Error al abrir el archivo: " << archivo << endl;
+        exit(EXIT_FAILURE);
+    }
+
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            archivoEntrada >> matrizEmparejamiento[i][j];
+            cout << "matrizEmparejamiento[" << i << "][" << j << "] = " << matrizEmparejamiento[i][j] << endl;
+        }
+    }
+    archivoEntrada.close();
+}
+
+// Algoritmo de Needleman-Wunsch
 void needlemanWunsch(const string &S, const string &T, int V) {
     int n = S.size();
     int m = T.size();
@@ -40,11 +76,13 @@ void needlemanWunsch(const string &S, const string &T, int V) {
             } else if (i == 0 && j > 0) {
                 f[i][j] = f[i][j - 1] + V; // Caso: primera cadena vacía
             } else {
-                f[i][j] = max({
+                f[i][j] = max(
                     f[i - 1][j] + V, // No emparejar S[i]
-                    f[i][j - 1] + V, // No emparejar T[j]
-                    f[i - 1][j - 1] + U(S[i - 1], T[j - 1]) // Emparejar S[i] con T[j]
-                });
+                    max(
+                        f[i][j - 1] + V, // No emparejar T[j]
+                        f[i - 1][j - 1] + matrizEmparejamiento[indiceCaracter(S[i - 1])][indiceCaracter(T[j - 1])] // Emparejar S[i] con T[j]
+                    )
+                );
             }
         }
     }
@@ -66,11 +104,11 @@ void needlemanWunsch(const string &S, const string &T, int V) {
             alineamientoS = '-' + alineamientoS;
             alineamientoT = T[j - 1] + alineamientoT;
             j--;
-        } else if (i > 0 && j > 0 && f[i][j] == f[i - 1][j] + V) {
+        } else if (i > 0 && f[i][j] == f[i - 1][j] + V) {
             alineamientoS = S[i - 1] + alineamientoS;
             alineamientoT = '-' + alineamientoT;
             i--;
-        } else if (i > 0 && j > 0 && f[i][j] == f[i][j - 1] + V) {
+        } else if (j > 0 && f[i][j] == f[i][j - 1] + V) {
             alineamientoS = '-' + alineamientoS;
             alineamientoT = T[j - 1] + alineamientoT;
             j--;
@@ -86,17 +124,11 @@ void needlemanWunsch(const string &S, const string &T, int V) {
     cout << "Alineamiento de T: " << alineamientoT << endl;
 }
 
-//Respuestas a entregar:
-//Mostrar como queda la matriz 
-//Calcular el puntaje maximo de emparejamiento
-//Mostrar emparejamiento que da el puntaje maximo 
-
-// Función principal
 int main(int argc, char *argv[]) {
     cout << "Iniciando programa..." << endl;
 
     if (argc != 9) {
-        cerr << "Uso: ./proyecto -C1 CYTB.txt -C2 CYTB2.txt -U funU.txt -V val" << endl;
+        cerr << "Uso: ./programa -C1 archivo1 -C2 archivo2 -U matriz -V valor" << endl;
         return EXIT_FAILURE;
     }
 
@@ -114,6 +146,13 @@ int main(int argc, char *argv[]) {
             return EXIT_FAILURE;
         }
     }
+
+    //probando que los parametros de entrada funcionesn bien
+    cout << "Archivos procesados:" << endl;
+    cout << "Secuencia 1: " << archivoS << endl;
+    cout << "Secuencia 2: " << archivoT << endl;
+    cout << "Matriz: " << archivoU << endl;
+    cout << "Valor de hueco: " << V << endl;
 
     string S = leerSecuencia(archivoS);
     string T = leerSecuencia(archivoT);
