@@ -1,9 +1,10 @@
 #include <iostream> 
 #include <fstream> 
 #include <string>
-#include <algorithm> //Para utilizar la funcion max
+#include <algorithm> // max
+#include <iomanip> // setw
 #include <unordered_map>
-#include <cstdlib> // Para usar system()
+#include <cstdlib> // system
 
 using namespace std;
 
@@ -18,7 +19,7 @@ int matrizEmparejamiento[4][4];
 char alfabeto[4] = {'A', 'G', 'C', 'T'};
 
 
-// Función para convertir un carácter en un índice (0, 1, 2, 3)
+// Función para convertir un carácter en un índice (0, 1, 2, 3)--------------------------------------------------------------------------------------------------------------------------
 int indiceCaracter(char c) {
     for (int i = 0; i < 4; i++) {
         if (alfabeto[i] == c){
@@ -29,8 +30,7 @@ int indiceCaracter(char c) {
 }
 
 
-// Leer la secuencia de un archivo
-// convierte la secuencia a cadena de texto
+// Leer la secuencia de un archivo-------------------------------------------------------------------------------------------------------------------------------------------------------
 string leerSecuencia(const string &archivo) {
     ifstream archivoEntrada(archivo);
     if (!archivoEntrada.is_open()) {
@@ -49,7 +49,7 @@ string leerSecuencia(const string &archivo) {
 }
 
 
-// Leer la matriz de emparejamiento
+// Leer la matriz de emparejamiento-----------------------------------------------------------------------------------------------------------------------------------------------------
 void leerMatrizEmparejamiento(const string &archivo) {
     ifstream archivoEntrada(archivo);
     if (!archivoEntrada.is_open()) {
@@ -71,10 +71,77 @@ void leerMatrizEmparejamiento(const string &archivo) {
         }
         cout << endl;
     }
-
 }
 
-// Visualizar el alineamiento 
+
+// Función para imprimir matriz de puntajes----------------------------------------------------------------------------------------------------------------------------------------------
+// Limita tamaño mostrado para mantener orden visual
+void imprimirMatrizPuntajes(int** matriz, int filas, int columnas, const string& secuencia1, const string& secuencia2, int limiteFilas = 30, int limiteColumnas = 30) {
+    cout << "   ";
+    cout << "     ";
+
+    for (int j = 0; j <= min(columnas, limiteColumnas); ++j) {
+        if (j == 0)
+            cout << setw(3) << "-";
+        else
+            cout << setw(3) << secuencia2[j - 1];
+    }
+
+    if (columnas > limiteColumnas) {
+        cout << " ...";
+    }
+    cout << endl;
+
+    for (int i = 0; i <= min(filas, limiteFilas); ++i) {
+        if (i == 0) {
+            cout << setw(3) << "-";
+        } else {
+            cout << setw(3) << secuencia1[i - 1];
+        }
+        for (int j = 0; j <= min(columnas, limiteColumnas); ++j) {
+            cout << setw(3) << matriz[i][j];
+        }
+
+        if (columnas > limiteColumnas) {
+            cout << " ...";
+        }
+        cout << endl;
+    }
+
+    if (filas > limiteFilas) {
+        cout << "...\n";
+    }
+}
+
+
+//Función para calcular porcentaje de similitud de las secuencias------------------------------------------------------------------------------------------------------------------------
+void calcularPorcentajeSimilitud(const string& alineamientoS, const string& alineamientoT) {
+    if (alineamientoS.size() != alineamientoT.size()) {
+        cerr << "Error: las secuencias alineadas deben tener el mismo tamaño.\n";
+        return;
+    }
+
+    int coincidencias = 0;
+    int longitud = alineamientoS.size();
+
+    // Contar coincidencias
+    for (size_t i = 0; i < alineamientoS.size(); ++i) {
+        if (alineamientoS[i] == alineamientoT[i] && alineamientoS[i] != '-' && alineamientoT[i] != '-') {
+            coincidencias++;
+        }
+    }
+
+    // Calcular porcentaje
+    double porcentajeSimilitud = (static_cast<double>(coincidencias) / longitud) * 100;
+
+    // Mostrar resultado
+    cout << "----------------------------------------------------------------------------------------\n";
+    cout << "Porcentaje de similitud: " << fixed << setprecision(2) << porcentajeSimilitud << "%\n";
+    cout << "----------------------------------------------------------------------------------------\n";
+}
+
+
+// Función para visualizar el alineamiento ----------------------------------------------------------------------------------------------------------------------------------------------
 void visualizarAlineamiento(const string& alineamientoS, const string& alineamientoT) {
     auto obtenerColor = [](char c) -> string {
         unordered_map<char, string> mapaColores = {
@@ -129,11 +196,11 @@ void visualizarAlineamiento(const string& alineamientoS, const string& alineamie
     archivo.close();
 
     system("dot -Tpng emparejamiento.txt -o emparejamiento.png");
-    cout << "Visualización guardada como 'emparejamiento.png'.\n";
 }
 
-// Algoritmo de Needleman-Wunsch
-    void needlemanWunsch(const string &S, const string &T, int V) {
+
+// Algoritmo de Needleman-Wunsch---------------------------------------------------------------------------------------------------------------------------------------------------------
+void needlemanWunsch(const string &S, const string &T, int V) {
     int n = S.size();
     int m = T.size();
 
@@ -143,33 +210,26 @@ void visualizarAlineamiento(const string& alineamientoS, const string& alineamie
         f[i] = new int[m + 1];
     }
 
-    // Llenar la matriz de puntajes siguiendo las reglas del algoritmo
+    // Llenar la matriz de puntajes 
     for (int i = 0; i <= n; ++i) {
         for (int j = 0; j <= m; ++j) {
             if (i == 0 && j == 0) {
-                f[i][j] = 0;  // Caso base
+                f[i][j] = 0;  
             } else if (i > 0 && j == 0) {
-                f[i][j] = f[i - 1][j] + V;  // Primera columna
+                f[i][j] = f[i - 1][j] + V;  
             } else if (i == 0 && j > 0) {
-                f[i][j] = f[i][j - 1] + V;  // Primera fila
+                f[i][j] = f[i][j - 1] + V;  
             } else if (i > 0 && j > 0) {
                 f[i][j] = max({
-                    f[i - 1][j] + V,  // Insertar un hueco en T
-                    f[i][j - 1] + V,  // Insertar un hueco en S
-                    f[i - 1][j - 1] + matrizEmparejamiento[indiceCaracter(S[i - 1])][indiceCaracter(T[j - 1])]  // Emparejar
+                    f[i - 1][j] + V,  
+                    f[i][j - 1] + V,  
+                    f[i - 1][j - 1] + matrizEmparejamiento[indiceCaracter(S[i - 1])][indiceCaracter(T[j - 1])] // Emparejar
                 });
             }
         }
     }
 
-    // Imprimir la matriz de puntajes completa (puedes limitar el tamaño para depuración)
-    cout << "Matriz de puntajes:\n";
-    for (int i = 0; i <= min(n, 30); ++i) {
-        for (int j = 0; j <= min(m, 30); ++j) {
-            cout << f[i][j] << " ";
-        }
-        cout << endl;
-    }
+    imprimirMatrizPuntajes(f, n, m, S, T, 30, 30);
 
     // Puntaje máximo
     cout << "----------------------------------------------------------------------------------------\n";
@@ -205,12 +265,14 @@ void visualizarAlineamiento(const string& alineamientoS, const string& alineamie
         }
     }
 
-    // Mostrar el alineamiento (parcial < 1000)
+    // Mostrar el alineamiento
     cout << "Alineamiento de S: " << alineamientoS.substr(0, 1000) << endl;
     cout << "Alineamiento de T: " << alineamientoT.substr(0, 1000) << endl;
+    
     visualizarAlineamiento(alineamientoS, alineamientoT);
+    calcularPorcentajeSimilitud(alineamientoS, alineamientoT);
 
-    // Liberar memoria de la matriz dinámica
+    // Liberar memoria d
     for (int i = 0; i <= n; ++i) {
         delete[] f[i];
     }
@@ -219,8 +281,8 @@ void visualizarAlineamiento(const string& alineamientoS, const string& alineamie
 }
 
 
+// Función principal---------------------------------------------------------------------------------------------------------------------------------------------------------------------
 int main(int argc, char *argv[]) {
-    //Depurando
     cout << "Iniciando programa..." << endl;
 
     if (argc != 9) {
@@ -228,7 +290,6 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    //Manejar argumentos de entrada
     string archivoS, archivoT, archivoU;
     int V;
 
