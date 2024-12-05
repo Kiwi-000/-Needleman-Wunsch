@@ -1,22 +1,31 @@
-Programa de alineamiento entre dos secuencias 
-..........Algoritmo Needlema-Wunch...........
+Alineamiento de Secuencias Biológicas usando Needleman-Wunsch
 
-Secuencias a alinear y sus archivos: 
+Este programa implementa el algoritmo de Needleman-Wunsch para realizar el alineamiento de secuencias biológicas, calculando la similitud entre dos cadenas de ADN. Utiliza una matriz de emparejamiento para determinar 
+puntuaciones y genera alineamientos visualizados gráficamente.
+
+> Requisitos del sistema:
+    - Lenguaje: C++
+    - Dependencias:
+        Herramienta Graphviz para la visualización gráfica (comando dot).
+
+> Secuencias a alinear y sus archivos: 
     CYTB1.txt -> Gen CYTB en Macaca Mulatta
     CYTB2.txt -> Gen CYTB en Alouatta Seniculus
 
-Alfabeto:
-    A = {'A', 'G', 'C', 'T'}
-
-Matriz de emparejamiento: 
-    [funU.txt]
-
-        Inicial :
+> Matriz de emparejamiento [funU.txt]
         - A G C T
         A 1 -1 -1 -1
         G -1 1 -1 -1
         C -1 -1 1 -1
         T -1 -1 -1 1
 
-Compilacion del Programa:
+> Ejecución del Programa:
     :~$ ./proyecto -C1 CYTB.txt -C2 CYTB2.txt -U funU.tex -V val
+
+> Parámetros:
+    -C1: Archivo que contiene la primera secuencia de ADN.
+    -C2: Archivo que contiene la segunda secuencia de ADN.
+    -U: Archivo que define la matriz de emparejamiento.
+    -V: Valor entero para la penalización por gaps.
+
+Antonia Rojas (2024)
