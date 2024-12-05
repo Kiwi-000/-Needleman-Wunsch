@@ -10,8 +10,10 @@ using namespace std;
 // Dimensiones máximas de las secuencias
 const int MAXN = 1001;
 const int MAXM = 1001;
+
 // Matriz de emparejamiento/puntuaación
 int matrizEmparejamiento[4][4];
+
 //Caracteres de las secuencias
 char alfabeto[4] = {'A', 'G', 'C', 'T'};
 
@@ -131,46 +133,47 @@ void visualizarAlineamiento(const string& alineamientoS, const string& alineamie
 }
 
 // Algoritmo de Needleman-Wunsch
-void needlemanWunsch(const string &S, const string &T, int V) {
+    void needlemanWunsch(const string &S, const string &T, int V) {
     int n = S.size();
     int m = T.size();
 
-    // Usando solo dos filas 
-    //ERROR ERROR :V
-    int f[2][MAXM + 1] = {0}; 
+    // Matriz de puntajes como un arreglo dinámico
+    int **f = new int*[n + 1];
+    for (int i = 0; i <= n; ++i) {
+        f[i] = new int[m + 1];
+    }
 
-    // Inicializar la primera fila y columna
-    for (int j = 0; j <= m; ++j) f[0][j] = j * V;
-
-    // Llenar la matriz
-    for (int i = 1; i <= n; ++i) {
-        f[1][0] = i * V; // Primera columna de la fila actual
-        for (int j = 1; j <= m; ++j) {
-            int match = f[0][j - 1] + matrizEmparejamiento[indiceCaracter(S[i - 1])][indiceCaracter(T[j - 1])];
-            int deleteGap = f[0][j] + V;
-            int insertGap = f[1][j - 1] + V;
-
-            f[1][j] = max({match, deleteGap, insertGap}); //calcular el valor máximo entre tres opciones
-        }
-
-        // Copiar la fila actual a la fila anterior 
+    // Llenar la matriz de puntajes siguiendo las reglas del algoritmo
+    for (int i = 0; i <= n; ++i) {
         for (int j = 0; j <= m; ++j) {
-            f[0][j] = f[1][j];
+            if (i == 0 && j == 0) {
+                f[i][j] = 0;  // Caso base
+            } else if (i > 0 && j == 0) {
+                f[i][j] = f[i - 1][j] + V;  // Primera columna
+            } else if (i == 0 && j > 0) {
+                f[i][j] = f[i][j - 1] + V;  // Primera fila
+            } else if (i > 0 && j > 0) {
+                f[i][j] = max({
+                    f[i - 1][j] + V,  // Insertar un hueco en T
+                    f[i][j - 1] + V,  // Insertar un hueco en S
+                    f[i - 1][j - 1] + matrizEmparejamiento[indiceCaracter(S[i - 1])][indiceCaracter(T[j - 1])]  // Emparejar
+                });
+            }
         }
     }
 
-    // Imprimir la matriz de puntajes correctamente
-    cout << "Matriz de puntajes:\n"; //Parcial 
+    // Imprimir la matriz de puntajes completa (puedes limitar el tamaño para depuración)
+    cout << "Matriz de puntajes:\n";
     for (int i = 0; i <= min(n, 30); ++i) {
         for (int j = 0; j <= min(m, 30); ++j) {
-            cout << f[i % 2][j] << " ";
+            cout << f[i][j] << " ";
         }
         cout << endl;
     }
 
     // Puntaje máximo
     cout << "----------------------------------------------------------------------------------------\n";
-    cout << "Puntaje maximo: " << f[0][m] << endl;
+    cout << "Puntaje maximo: " << f[n][m] << endl;
     cout << "----------------------------------------------------------------------------------------\n";
 
     // Reconstrucción del alineamiento
@@ -186,11 +189,11 @@ void needlemanWunsch(const string &S, const string &T, int V) {
             alineamientoS = '-' + alineamientoS;
             alineamientoT = T[j - 1] + alineamientoT;
             j--;
-        } else if (i > 0 && f[i % 2][j] == f[(i - 1) % 2][j] + V) {
+        } else if (i > 0 && j > 0 && f[i][j] == f[i - 1][j] + V) {
             alineamientoS = S[i - 1] + alineamientoS;
             alineamientoT = '-' + alineamientoT;
             i--;
-        } else if (j > 0 && f[i % 2][j] == f[i % 2][j - 1] + V) {
+        } else if (i > 0 && j > 0 && f[i][j] == f[i][j - 1] + V) {
             alineamientoS = '-' + alineamientoS;
             alineamientoT = T[j - 1] + alineamientoT;
             j--;
@@ -206,6 +209,12 @@ void needlemanWunsch(const string &S, const string &T, int V) {
     cout << "Alineamiento de S: " << alineamientoS.substr(0, 1000) << endl;
     cout << "Alineamiento de T: " << alineamientoT.substr(0, 1000) << endl;
     visualizarAlineamiento(alineamientoS, alineamientoT);
+
+    // Liberar memoria de la matriz dinámica
+    for (int i = 0; i <= n; ++i) {
+        delete[] f[i];
+    }
+    delete[] f;
 
 }
 
@@ -235,13 +244,6 @@ int main(int argc, char *argv[]) {
             return EXIT_FAILURE;
         }
     }
-
-    // Probando que los parámetros de entrada funcionen bien
-    /*cout << "Archivos procesados:" << endl;
-    cout << "Secuencia 1: " << archivoS << endl;
-    cout << "Secuencia 2: " << archivoT << endl;
-    cout << "Matriz: " << archivoU << endl;
-    cout << "Valor de hueco: " << V << endl;*/
 
     //Entrega el archivo correspondiente a cada seguncia y matriz
     string S = leerSecuencia(archivoS);
